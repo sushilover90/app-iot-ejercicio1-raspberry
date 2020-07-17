@@ -38,8 +38,11 @@ if auth:
 
         if(len(lecturas)) == cantidad_lecturas_mongo:
             now = datetime.now()
+            headers = {'Authorization': 'Bearer ' + token}
+            # data (body)
             _pload = {"sensor_id":sensor_id,'fecha_registro':now.strftime('%Y/%m/%d'),'hora_registro':now.strftime('%H:%M:%S'),'lecturas':lecturas}
-            _rq = requests.post('http://192.168.100.5:3333/sensores/lecturas/register',json=_pload)
+            _url = 'http://192.168.100.5:3333/sensores/lecturas/register'
+            _rq = requests.post(_url,json=_pload,headers=headers)
             if _rq.status_code == 200:
                 now = datetime.now()
                 clear()
