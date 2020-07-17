@@ -1,5 +1,6 @@
 from datetime import datetime
 from pprint import pprint
+import json
 import os
 import getpass
 import requests
@@ -24,8 +25,9 @@ lecturas = []
 
 if rq.status_code == 200:
     token = rq.json()['token']
-    print('Login exitoso')
+    print('Login exitoso\n')
     sensor_id = int(input('Ingrese el sensor_id: \n'))
+    cantidad_lecturas_mongo = int(input('Ingrese el numero de lecturas a registrar en mongo: \n'))
     clear()
     auth = True
 else:
@@ -34,29 +36,23 @@ else:
 if auth:
     while True:
 
-        if(len(lecturas)) == 2:
-
+        if(len(lecturas)) == cantidad_lecturas_mongo:
+            now = datetime.now()
+            _pload = {"sensor_id":sensor_id,'fecha_registro':now.strftime('%Y/%m/%d'),'hora_registro':now.strftime('%H:%M:%S'),'lecturas':lecturas}
+            _rq = requests.post('http://192.168.100.5:3333/sensores/lecturas/register',json=_pload)
+            if _rq.status_code == 200:
                 now = datetime.now()
-                _pload = {"sensor_id":sensor_id,'fecha_registro':now.strftime('%Y/%m/%d'),'hora_registro':now.strftime('%H:%M:%S'),'lecturas':lecturas}
-                _rq = requests.post('http://192.168.100.5:3333/sensores/lecturas/register',data=_pload)
                 clear()
-                pprint(lecturas)
-                print('\n')
-                pprint(_rq.json())
+                print('Hora del registro: ' + now.strftime('%Y/%m/%d') + ' ' + now.strftime('%H:%M:%S'))
+                print(_rq.json())
                 lecturas = []
-                #print('registrao')
+            else:
+                now = datetime.now()
+                print('Hubo un error en el registro. Hora: ' + now.strftime('%Y/%m/%d') + '\n')
 
         humidity, temperature = Adafruit_DHT.read(DHT_SENSOR,DHT_PIN)
         if humidity is not None and temperature is not None:
-            #print('temperatura: ' + str(temperature))
-            #print('humedad: ' + str(humidity))
-            #print(now.strftime('%Y/%m/%d'))
-            #print(now.strftime('%H:%M:%S'))
             now = datetime.now()
             lecturas.append({'fecha_registro':now.strftime('%Y/%m/%d'),'hora_registro':now.strftime('%H:%M:%S'),'temperatura':temperature,'humedad':humidity})
-            #pprint(lecturas)
-            #print(len(lecturas))
-
             time.sleep(1)
-
 
